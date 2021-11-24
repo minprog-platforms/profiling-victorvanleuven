@@ -1,12 +1,12 @@
 from __future__ import annotations
-from typing import Iterable, Sequence
-
+from typing import Iterable
 
 class Sudoku:
     """A mutable sudoku puzzle."""
 
     def __init__(self, puzzle: Iterable[Iterable]):
         self._grid: list[str] = []
+        self._values = (1, 2, 3, 4, 5, 6, 7, 8, 9)
 
         for puzzle_row in puzzle:
             row = ""
@@ -29,6 +29,8 @@ class Sudoku:
 
         self._grid[y] = new_row
 
+
+
     def unplace(self, x: int, y: int) -> None:
         """Remove (unplace) a number at x,y."""
         row = self._grid[y]
@@ -37,35 +39,30 @@ class Sudoku:
 
     def value_at(self, x: int, y: int) -> int:
         """Returns the value at x,y."""
-        value = -1
-
-        for i in range(9):
-            for j in range(9):
-                if i == x and j == y:
-                    row = self._grid[y]
-                    value = int(row[x])
-
-        return value
+        return int(self._grid[y][x])
 
     def options_at(self, x: int, y: int) -> Iterable[int]:
         """Returns all possible values (options) at x,y."""
-        options = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        options = {1, 2, 3, 4, 5, 6, 7, 8, 9}
 
         # Remove all values from the row
-        for value in self.row_values(y):
+        row_values = set(self.row_values(y))
+        for value in row_values:
             if value in options:
                 options.remove(value)
 
         # Remove all values from the column
-        for value in self.column_values(x):
+        column_values = set(self.column_values(x))
+        for value in column_values:
             if value in options:
                 options.remove(value)
 
         # Get the index of the block based from x,y
         block_index = (y // 3) * 3 + x // 3
 
+        block_values = set(self.block_values(block_index))
         # Remove all values from the block
-        for value in self.block_values(block_index):
+        for value in block_values:
             if value in options:
                 options.remove(value)
 
@@ -76,14 +73,12 @@ class Sudoku:
         Returns the next index (x,y) that is empty (value 0).
         If there is no empty spot, returns (-1,-1)
         """
-        next_x, next_y = -1, -1
-
         for y in range(9):
             for x in range(9):
-                if self.value_at(x, y) == 0 and next_x == -1 and next_y == -1:
-                    next_x, next_y = x, y
+                if self.value_at(x, y) == 0:
+                    return x, y
 
-        return next_x, next_y
+        return -1, -1
 
     def row_values(self, i: int) -> Iterable[int]:
         """Returns all values at i-th row."""
@@ -127,22 +122,19 @@ class Sudoku:
         Returns True if and only if all rows, columns and blocks contain
         only the numbers 1 through 9. False otherwise.
         """
-        values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-
-        result = True
 
         for i in range(9):
-            for value in values:
+            for value in self._values:
                 if value not in self.column_values(i):
-                    result = False
+                    return False
 
                 if value not in self.row_values(i):
-                    result = False
+                    return False
 
                 if value not in self.block_values(i):
-                    result = False
+                    return False
 
-        return result
+        return True
 
     def __str__(self) -> str:
         representation = ""
